@@ -47,7 +47,7 @@ API не увеличивается при добавлении новых ме�
 Призван защитить терминал от неправильной работы плагинов.
 Если API не используется или вам все равно, можно задать заведомо большое число (999999).
 """
-API = 665
+API = 30
 
 """
 Опционально. None или итерируемый объект.
@@ -79,7 +79,6 @@ class Main(threading.Thread):
     Методы: start, reload, stop, join.
     Свойства: disable.
     """
-    INTERVAL = 3600 * 12
 
     def __init__(self, cfg, log, owner):
         """
@@ -96,10 +95,8 @@ class Main(threading.Thread):
         self._wait = threading.Event()
         self._work = False
         self._events = (
-            'speech_recognized_success', 'voice_activated', 'ask_again',
-            'music_status', 'start_record', 'stop_record', 'start_talking', 'stop_talking',
+            'speech_recognized_success', 'voice_activated', 'ask_again', 'start_record', 'stop_record', 'start_talking', 'stop_talking',
             'volume', 'music_volume',
-            'updater',
         )
 
         self.disable = False
@@ -139,29 +136,6 @@ class Main(threading.Thread):
         else:
             self._subscribe()
 
-    def stop(self):
-        """
-        Опционально. Вызывается при завершении терминала, если join() отсутствует.
-        Вызов этого метода будет отражен в логе.
-        :return: None
-        """
-        raise RuntimeError('Never!')
-
-    def run(self):
-        while self._work:
-            self._wait.wait(self.INTERVAL)
-            if self._wait.is_set():
-                self._wait.clear()
-                continue
-            if self.disable:
-                continue
-            try:
-                msg = random_quotes()
-            except RuntimeError as e:
-                self.log(e, logger.WARN)
-            else:
-                self.own.say(msg)
-
     def _callback(self, name, data=None, *_, **__):
         #self._wait.set()
         if name=='start_talking':
@@ -190,30 +164,8 @@ class Main(threading.Thread):
 
     def _subscribe(self):
         self.own.subscribe(self._events, self._callback)
-        #self.own.insert_module(DynamicModule(self._mod_callback, NM, [['скажи афоризм', EQ], ['расскажи афоризм', EQ]]))
 
     def _unsubscribe(self):
         self.own.unsubscribe(self._events, self._callback)
         self.own.extract_module(self._mod_callback)
 
-
-def random_quotes() -> str:
-    params = {
-        'method': 'getQuote',
-        'format': 'json',
-        'lang': 'ru',
-        'key': '',
-    }
-    try:
-        result = requests.post('http://api.forismatic.com/api/1.0/', params=params)
-    except REQUEST_ERRORS as e:
-        raise RuntimeError('Request error: {}'.format(e))
-    if not result.ok:
-        raise RuntimeError('Server error {}:{}'.format(result.status_code, result.reason))
-    try:
-        msg = result.json()['quoteText'][:200]
-    except (TypeError, KeyError, ValueError) as e:
-        raise RuntimeError('Parsing error: {}, {}'.format(e, result.text[:200]))
-    if not msg:
-        raise RuntimeError('Empty quote')
-    return msg
