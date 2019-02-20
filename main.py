@@ -140,21 +140,20 @@ class Main(threading.Thread):
         #self._wait.set()
         if name=='start_talking':
             gpio.output(led, 0)
-            self.log('LED1 on', logger.DEBUG)
+            self.log('start_talking LED1 on', logger.DEBUG)
 
         if name == 'stop_talking':
             gpio.output(led, 1)
-            self.log('LED1 off', logger.DEBUG)
+            self.log('stop_talking LED1 off', logger.DEBUG)
 
         if name == 'start_record':
             gpio.output(led1, 0)
-            self.log('LED2 on', logger.DEBUG)
+            self.log('start_record LED2 on', logger.DEBUG)
 
         if name == 'stop_record':
             gpio.output(led1, 1)
-            self.log('LED2 off', logger.DEBUG)
+            self.log('stop_record LED2 off', logger.DEBUG)
 
-        self.log(name, logger.DEBUG)
 
     def _mod_callback(self, *_):
         try:
