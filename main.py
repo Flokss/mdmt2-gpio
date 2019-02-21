@@ -170,7 +170,7 @@ class Main(threading.Thread):
         self.own.extract_module(self._mod_callback)
         
     def _get_settings(self) -> dict:
-        def_cfg = {'led_on': 0}
+        def_cfg = {'led_on': 1}
         cfg = self.cfg.load_dict(SETTINGS)
         if isinstance(cfg, dict):
             is_ok = True
