@@ -61,7 +61,7 @@ API = 30
 ('mpd', 'models' 'log')
 """
 CFG_RELOAD = {'settings': ('lang',)}
-
+SETTINGS = 'gpio_config_config'
 """
 Опционально.
 Если bool(DISABLE) == True, терминал прекратит проверку модуля и не загрузит плагин.
@@ -98,7 +98,7 @@ class Main(threading.Thread):
             'speech_recognized_success', 'voice_activated', 'ask_again', 'start_record', 'stop_record', 'start_talking', 'stop_talking',
             'volume', 'music_volume',
         )
-
+        self._settings = self._get_settings()
         self.disable = False
 
     def start(self):
@@ -167,4 +167,17 @@ class Main(threading.Thread):
     def _unsubscribe(self):
         self.own.unsubscribe(self._events, self._callback)
         self.own.extract_module(self._mod_callback)
-
+        
+    def _get_settings(self) -> dict:
+        def_cfg = {'led_on': 0}
+        cfg = self.cfg.load_dict(SETTINGS)
+        if isinstance(cfg, dict):
+            is_ok = True
+            for key, val in def_cfg.items():
+                if key not in cfg or not isinstance(cfg[key], type(val)):
+                    is_ok = False
+                    break
+            if is_ok:
+                return cfg
+        self.cfg.save_dict(SETTINGS, def_cfg, True)
+        return def_cfg
