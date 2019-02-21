@@ -2,6 +2,8 @@
 
 # Установка
 ```
+для работы плагина необходимо чтобы  [mdmTerminal2](https://github.com/Aculeasis/mdmTerminal2) запускался с root правами
+
 # для плат на процессорах H2+ и H3
 cd ~
 git clone https://github.com/duxingkei33/orangepi_PC_gpio_pyH3
@@ -19,6 +21,12 @@ cd orangepi_PC_gpio_pyH5
 cd ~/mdmTerminal2/src/plugins
 git clone https://github.com/Flokss/mdmt2-gpio
 
+
+# для Raspberry Pi3 (Еще не проверял)
+cd ~
+~/mdmTerminal2/env/bin/python -m pip install RPi.GPIO
+cd ~/mdmTerminal2/src/plugins
+git clone https://github.com/Flokss/mdmt2-gpio
 ```
 И перезапустить терминал.
 # Описание
