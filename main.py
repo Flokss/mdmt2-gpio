@@ -37,8 +37,7 @@ gpio.init()
 gpio.setcfg(led, gpio.OUTPUT)
 gpio.setcfg(led1, gpio.OUTPUT)
 gpio.setcfg(led2, gpio.OUTPUT)
-gpio.output(led, 1)
-gpio.output(led1, 1)
+
 """
 Обязательно. Версия API под которую написан плагин, тип - int.
 Если оно меньше config.ConfigHandler.API то плагин не будет загружен, а в лог будет выдано сообщение.
