@@ -141,19 +141,19 @@ class Main(threading.Thread):
         led_on=self._settings['led_on']
         if name=='start_talking':
             gpio.output(led, led_on)
-            self.log('start_talking LED1 on '+ str(led_on), logger.DEBUG)
+            self.log('start_talking LED1 on ', logger.DEBUG)
 
         if name == 'stop_talking':
             gpio.output(led, not(led_on))
-            self.log('stop_talking LED1 off '+ str(not(led_on)), logger.DEBUG)
+            self.log('stop_talking LED1 off ', logger.DEBUG)
 
         if name == 'start_record':
             gpio.output(led1, led_on)
-            self.log('start_record LED2 on '+ str(led_on), logger.DEBUG)
+            self.log('start_record LED2 on ', logger.DEBUG)
 
         if name == 'stop_record':
             gpio.output(led1, not(led_on))
-            self.log('stop_record LED2  off ' + str(not(led_on)), logger.DEBUG)
+            self.log('stop_record LED2  off ', logger.DEBUG)
 
 
     def _mod_callback(self, *_):
