@@ -11,9 +11,25 @@ main.py - динамически загружаемый файл модуля. �
 
 Для успешной инициализации плагина, main.py должен содержать определенные свойства и точку входа (Main).
 """
+try:
+    from pyA20.gpio import gpio as _gpio
+    from pyA20.gpio import port as _port
+    _gpio.init()
+    GPIO_CFG = _gpio.setcfg
+    GPIO_OUTPUT_MODE = _gpio.OUTPUT
+    GPIO_OUT = _gpio.output
+    LED1 = _port.PA12
+    LED2 = _port.PA11
+except ImportError:
+    import RPi.GPIO as _GPIO
+    _GPIO.setmode(_GPIO.BCM)
+    _GPIO.setwarnings(False)
+    GPIO_CFG = _GPIO.setup
+    GPIO_OUTPUT_MODE = _GPIO.OUT
+    GPIO_OUT = _GPIO.output
+    LED1 = 12
+    LED2 = 11
 
-from pyA20.gpio import gpio
-from pyA20.gpio import port
 
 """
 Обязательно. Не пустое имя плагина, тип - str.
@@ -33,9 +49,7 @@ API не увеличивается при добавлении новых ме�
 """
 API = 30
 
-LED1 = port.PA12
-LED2 = port.PA11
-# led2 = port.PA6
+
 SETTINGS = 'gpio_config_config'
 
 
@@ -66,14 +80,12 @@ class Main:
 
     @staticmethod
     def _init():
-        gpio.init()
-        gpio.setcfg(LED1, gpio.OUTPUT)
-        gpio.setcfg(LED2, gpio.OUTPUT)
-        # gpio.setcfg(led2, gpio.OUTPUT)
+        GPIO_CFG(LED1, GPIO_OUTPUT_MODE)
+        GPIO_CFG(LED2, GPIO_OUTPUT_MODE)
 
     def _led_off(self):
-        gpio.output(LED1, not self._settings['led_on'])
-        gpio.output(LED2, not self._settings['led_on'])
+        GPIO_OUT(LED1, not self._settings['led_on'])
+        GPIO_OUT(LED2, not self._settings['led_on'])
 
     def start(self):
         self._init()
@@ -87,16 +99,16 @@ class Main:
     def _callback(self, name, *_, **__):
         led_on = self._settings['led_on']
         if name == 'start_talking':
-            gpio.output(LED1, led_on)
+            GPIO_OUT(LED1, led_on)
             self.log('start_talking LED1 on')
         elif name == 'stop_talking':
-            gpio.output(LED1, not led_on)
+            GPIO_OUT(LED1, not led_on)
             self.log('stop_talking LED1 off')
         elif name == 'start_record':
-            gpio.output(LED2, led_on)
+            GPIO_OUT(LED2, led_on)
             self.log('start_record LED2 on')
         elif name == 'stop_record':
-            gpio.output(LED2, not led_on)
+            GPIO_OUT(LED2, not led_on)
             self.log('stop_record LED2 off')
 
     def _get_settings(self) -> dict:
