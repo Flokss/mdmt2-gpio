@@ -1,8 +1,9 @@
 # Опытный образец плагина для  [mdmTerminal2](https://github.com/Aculeasis/mdmTerminal2)
 
+для работы плагина необходимо чтобы  [mdmTerminal2](https://github.com/Aculeasis/mdmTerminal2) запускался с root правами
 # Установка
 ```
-для работы плагина необходимо чтобы  [mdmTerminal2](https://github.com/Aculeasis/mdmTerminal2) запускался с root правами
+
 
 # для плат на процессорах H2+ и H3
 cd ~
