@@ -11,18 +11,25 @@ main.py - динамически загружаемый файл модуля. �
 
 Для успешной инициализации плагина, main.py должен содержать определенные свойства и точку входа (Main).
 """
+try:
+    from pyA20.gpio import gpio as _gpio
+    from pyA20.gpio import port as _port
+    _gpio.init()
+    GPIO_CFG = _gpio.setcfg
+    GPIO_OUTPUT_MODE = _gpio.OUTPUT
+    GPIO_OUT = _gpio.output
+    LED1 = _port.PA12
+    LED2 = _port.PA11
+except ImportError:
+    import RPi.GPIO as _GPIO
+    _GPIO.setmode(_GPIO.BCM)
+    _GPIO.setwarnings(False)
+    GPIO_CFG = _GPIO.setup
+    GPIO_OUTPUT_MODE = _GPIO.OUT
+    GPIO_OUT = _GPIO.output
+    LED1 = 12
+    LED2 = 11
 
-import threading
-import os
-import sys
-import requests
-from time import sleep
-from pyA20.gpio import gpio
-from pyA20.gpio import port
-import logger
-from languages import LANG_CODE
-from modules_manager import DynamicModule, Say, NM, EQ
-from utils import REQUEST_ERRORS
 
 """
 Обязательно. Не пустое имя плагина, тип - str.
@@ -30,13 +37,7 @@ from utils import REQUEST_ERRORS
 Имя плагина является его идентификатором и должно быть уникально.
 """
 NAME = 'gpio'
-led = port.PA12
-led1 = port.PA11
-led2 = port.PA6
-gpio.init()
-gpio.setcfg(led, gpio.OUTPUT)
-gpio.setcfg(led1, gpio.OUTPUT)
-gpio.setcfg(led2, gpio.OUTPUT)
+
 
 """
 Обязательно. Версия API под которую написан плагин, тип - int.
@@ -48,28 +49,11 @@ API не увеличивается при добавлении новых ме�
 """
 API = 30
 
-"""
-Опционально. None или итерируемый объект.
-Содержит секции из конфига, удаленное изменение которых вызовет метод reload() у точки входа (при наличии).
-Если вызов reload завершится ошибкой, то больше он вызываться не будет (пока терминал не перезапустится).
-Если объект dict и значение секции итерируемое, то будут сравниваться ключи в секции.
-Примеры:
-# Вызов при изменении [settings] lang или [modules] allow
-{'settings': ('lang',), 'modules': {'allow': ''}}
-# Вызов при изменении секции mpd, models или log
-('mpd', 'models' 'log')
-"""
-CFG_RELOAD = {'settings': ('lang',)}
+
 SETTINGS = 'gpio_config_config'
-"""
-Опционально.
-Если bool(DISABLE) == True, терминал прекратит проверку модуля и не загрузит плагин.
-Проверяется первым.
-"""
-# DISABLE = False
 
 
-class Main(threading.Thread):
+class Main:
     """
     Обязательно. Точка входа в плагин, должна быть callable.
     Ожидается что это объект класса, экземпляр которого будет создан, но может быть и методом.
@@ -86,88 +70,47 @@ class Main(threading.Thread):
         :param log: ссылка на специальный логгер, вызов: log(msg, lvl=logger.Debug)
         :param owner: ссылка на экземпляр loader.Loader
         """
-        super().__init__()
         self.cfg = cfg
         self.log = log
         self.own = owner
 
-        self._wait = threading.Event()
-        self._work = False
-        self._events = (
-            'speech_recognized_success', 'voice_activated', 'ask_again', 'start_record', 'stop_record', 'start_talking', 'stop_talking',
-            'volume', 'music_volume',
-        )
+        self._events = ('start_record', 'stop_record', 'start_talking', 'stop_talking')
         self._settings = self._get_settings()
         self.disable = False
 
+    @staticmethod
+    def _init():
+        GPIO_CFG(LED1, GPIO_OUTPUT_MODE)
+        GPIO_CFG(LED2, GPIO_OUTPUT_MODE)
+
+    def _led_off(self):
+        GPIO_OUT(LED1, not self._settings['led_on'])
+        GPIO_OUT(LED2, not self._settings['led_on'])
+
     def start(self):
-        """
-        Опционально. Вызывается после того как все плагины будут созданы.
-        Вызов метода также будет отражен в логе.
-        При любой ошибке терминал сочтет плагин сломанным и будет его игнорировать.
-        :return: None
-        """
-        self.reload()
-        self._work = True
-        super().start()
-
-    def join(self, timeout=None):
-        """
-        Опционально. Вызывается при завершении терминала. Будет вызван и при отсутствии start().
-        В лог будут добавлены сообщения до и после вызова.
-        :return: None
-        """
-        self._unsubscribe()
-        self._work = False
-        self._wait.set()
-        super().join(timeout)
-
-    def reload(self):
-        """
-        Опционально. Вызывается при изменении конфигурации согласно CFG_RELOAD.
-        Вызов этого метода будет отражен в логе.
-        При любой ошибке терминал сочтет reload() сломанным и больше не будет его вызывать.
-        :return: None
-        """
-        self.disable = LANG_CODE.get('ISO') != 'ru'
-        if self.disable:
-            self._unsubscribe()
-        else:
-            self._subscribe()
-
-    def _callback(self, name, data=None, *_, **__):
-        #self._wait.set()
-        led_on=self._settings['led_on']
-        if name=='start_talking':
-            gpio.output(led, led_on)
-            self.log('start_talking LED1 on ', logger.DEBUG)
-
-        if name == 'stop_talking':
-            gpio.output(led, not(led_on))
-            self.log('stop_talking LED1 off ', logger.DEBUG)
-
-        if name == 'start_record':
-            gpio.output(led1, led_on)
-            self.log('start_record LED2 on ', logger.DEBUG)
-
-        if name == 'stop_record':
-            gpio.output(led1, not(led_on))
-            self.log('stop_record LED2  off ', logger.DEBUG)
-
-
-    def _mod_callback(self, *_):
-        try:
-            return Say(random_quotes())
-        except RuntimeError as e:
-            self.log(e, logger.DEBUG)
-
-    def _subscribe(self):
+        self._init()
+        self._led_off()
         self.own.subscribe(self._events, self._callback)
 
-    def _unsubscribe(self):
+    def stop(self):
         self.own.unsubscribe(self._events, self._callback)
-        self.own.extract_module(self._mod_callback)
-        
+        self._led_off()
+
+    def _callback(self, name, *_, **__):
+        led_on = self._settings['led_on']
+        if name == 'start_talking':
+            GPIO_OUT(LED1, led_on)
+            self.log('start_talking LED1 on')
+        elif name == 'stop_talking':
+            GPIO_OUT(LED1, not led_on)
+            self.log('stop_talking LED1 off')
+        elif name == 'start_record':
+            GPIO_OUT(LED2, led_on)
+            self.log('start_record LED2 on')
+        elif name == 'stop_record':
+            GPIO_OUT(LED2, not led_on)
+            self.log('stop_record LED2 off')
+
     def _get_settings(self) -> dict:
         def_cfg = {'led_on': 1}
         cfg = self.cfg.load_dict(SETTINGS)
