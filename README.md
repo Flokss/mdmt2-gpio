@@ -2,12 +2,23 @@
 
 # Установка
 ```
+# для плат на процессорах H2+ и H3
 cd ~
 git clone https://github.com/duxingkei33/orangepi_PC_gpio_pyH3
 cd orangepi_PC_gpio_pyH3
 ~/mdmTerminal2/env/bin/python -m setup.py install
 cd ~/mdmTerminal2/src/plugins
 git clone https://github.com/Flokss/mdmt2-gpio
+
+
+# для плат на процессорах H5
+cd ~
+git clone https://github.com/herzig/orangepi_PC_gpio_pyH5
+cd orangepi_PC_gpio_pyH5
+~/mdmTerminal2/env/bin/python -m setup.py install
+cd ~/mdmTerminal2/src/plugins
+git clone https://github.com/Flokss/mdmt2-gpio
+
 ```
 И перезапустить терминал.
 # Описание
