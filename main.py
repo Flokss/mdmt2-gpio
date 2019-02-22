@@ -18,6 +18,7 @@ try:
     GPIO_CFG = _gpio.setcfg
     GPIO_OUTPUT_MODE = _gpio.OUTPUT
     GPIO_OUT = _gpio.output
+    BOARD = 'opi'
     LED1 = _port.PA12
     LED2 = _port.PA11
 except ImportError:
@@ -27,6 +28,7 @@ except ImportError:
     GPIO_CFG = _GPIO.setup
     GPIO_OUTPUT_MODE = _GPIO.OUT
     GPIO_OUT = _GPIO.output
+    BOARD = 'rpi'
     LED1 = 12
     LED2 = 11
 
@@ -112,7 +114,7 @@ class Main:
             self.log('stop_record LED2 off')
 
     def _get_settings(self) -> dict:
-        def_cfg = {'led_on': 1}
+        def_cfg = {'led_on': 1,'board':BOARD}
         cfg = self.cfg.load_dict(SETTINGS)
         if isinstance(cfg, dict):
             is_ok = True
