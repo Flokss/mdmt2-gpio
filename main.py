@@ -29,8 +29,8 @@ except ImportError:
     GPIO_OUTPUT_MODE = _GPIO.OUT
     GPIO_OUT = _GPIO.output
     BOARD = 'rpi'
-    LED1 = 12
-    LED2 = 11
+    LED1 = 20
+    LED2 = 21
 
 
 """
@@ -114,7 +114,7 @@ class Main:
             self.log('stop_record LED2 off')
 
     def _get_settings(self) -> dict:
-        def_cfg = {'led_on': 1,'board':BOARD}
+        def_cfg = {'led_on': 1,'board':BOARD, 'LED1':LED1, 'LED2':LED2}
         cfg = self.cfg.load_dict(SETTINGS)
         if isinstance(cfg, dict):
             is_ok = True
