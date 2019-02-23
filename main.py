@@ -18,8 +18,9 @@ try:
     GPIO_CFG = _gpio.setcfg
     GPIO_OUTPUT_MODE = _gpio.OUTPUT
     GPIO_OUT = _gpio.output
-    LED1 = _port.PA12
-    LED2 = _port.PA11
+    BOARD = 'opi'
+    LED1 =12 #_port.PA12
+    LED2 =11 # _port.PA11
 except ImportError:
     import RPi.GPIO as _GPIO
     _GPIO.setmode(_GPIO.BCM)
@@ -27,8 +28,9 @@ except ImportError:
     GPIO_CFG = _GPIO.setup
     GPIO_OUTPUT_MODE = _GPIO.OUT
     GPIO_OUT = _GPIO.output
-    LED1 = 12
-    LED2 = 11
+    BOARD = 'rpi'
+    LED1 = 20
+    LED2 = 21
 
 
 """
@@ -70,12 +72,15 @@ class Main:
         :param log: ссылка на специальный логгер, вызов: log(msg, lvl=logger.Debug)
         :param owner: ссылка на экземпляр loader.Loader
         """
+        global LED1
+        global LED2
         self.cfg = cfg
         self.log = log
         self.own = owner
-
-        self._events = ('start_record', 'stop_record', 'start_talking', 'stop_talking')
         self._settings = self._get_settings()
+        LED1 = self._settings['LED1']
+        LED2 = self._settings['LED2']
+        self._events = ('start_record', 'stop_record', 'start_talking', 'stop_talking')
         self.disable = False
 
     @staticmethod
@@ -91,6 +96,10 @@ class Main:
         self._init()
         self._led_off()
         self.own.subscribe(self._events, self._callback)
+        self.log('BOARD '+BOARD)
+        self.log('LED1 pin '+ str(LED1))
+        self.log('LED2 pin ' + str(LED2))
+
 
     def stop(self):
         self.own.unsubscribe(self._events, self._callback)
@@ -112,7 +121,10 @@ class Main:
             self.log('stop_record LED2 off')
 
     def _get_settings(self) -> dict:
-        def_cfg = {'led_on': 1}
+        if BOARD =='opi':
+            def_cfg = {'led_on': 1,'board':BOARD, 'LED1':11, 'LED2':12}
+        else:
+            def_cfg = {'led_on': 1, 'board': BOARD, 'LED1': 20, 'LED2': 21}
         cfg = self.cfg.load_dict(SETTINGS)
         if isinstance(cfg, dict):
             is_ok = True
