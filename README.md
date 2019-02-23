@@ -38,11 +38,12 @@ git clone https://github.com/Flokss/mdmt2-gpio
 ```
 # Настройка
 Настройки хранятся в mdmTerminal2/src/data/gpio_config_config.json, файл будет создан при первом запуске:
-
+```
 Для плат Orange Pi настройки при первом запуске LED1=12, LED2=11 (только GPIO PA)
 Для плат Raspberry Pi настройки при первом запуске LED1=20, LED2=21 (нумерация BCM)
-
+```
+```
 led_on: логический уровень включенного светодиода 0 или 1, по умолчанию 1
 LED1: пин GPIO светодиода для событий start_talking и stop_talking 
 LED2: пин GPIO светодиода для событий start_record и stop_record
-
+```
