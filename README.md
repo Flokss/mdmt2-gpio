@@ -23,7 +23,7 @@ cd ~/mdmTerminal2/src/plugins
 git clone https://github.com/Flokss/mdmt2-gpio
 
 
-# для Raspberry Pi3 (Еще не проверял)
+# для Raspberry Pi3 
 cd ~
 ~/mdmTerminal2/env/bin/python -m pip install RPi.GPIO
 cd ~/mdmTerminal2/src/plugins
@@ -31,13 +31,18 @@ git clone https://github.com/Flokss/mdmt2-gpio
 ```
 И перезапустить терминал.
 # Описание
-Плагин управляет светодиодами подключенными к gpio PA11 и PA12 (проверено на платах с процессорами H2+ и H3, возможно будет работать и с H5)
+Плагин управляет светодиодами подключенными к плате
 ```
- PA12 включает светодиод при проговаривании текста терминалом
- PA11 включает светодиод при записи голоса
+ LED1  при проговаривании текста терминалом
+ LED2  при записи голоса
 ```
 # Настройка
 Настройки хранятся в mdmTerminal2/src/data/gpio_config_config.json, файл будет создан при первом запуске:
 
+Для плат Orange Pi настройки при первом запуске LED1=12, LED2=11 (только GPIO PA)
+Для плат Raspberry Pi настройки при первом запуске LED1=20, LED2=21 (нумерация BCM)
+
 led_on: логический уровень включенного светодиода 0 или 1, по умолчанию 1
+LED1: пин GPIO светодиода для событий start_talking и stop_talking 
+LED2: пин GPIO светодиода для событий start_record и stop_record
 
