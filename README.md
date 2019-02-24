@@ -1,4 +1,4 @@
-# Опытный образец плагина для  [mdmTerminal2](https://github.com/Aculeasis/mdmTerminal2)
+# Плагин для [mdmTerminal2](https://github.com/Aculeasis/mdmTerminal2)
 
 для работы плагина необходимо чтобы  [mdmTerminal2](https://github.com/Aculeasis/mdmTerminal2) запускался с root правами
 # Установка
