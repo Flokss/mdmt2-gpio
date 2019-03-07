@@ -78,7 +78,7 @@ class Main:
         LED1 = self._settings['LED1']
         LED2 = self._settings['LED2']
         AMP = self._settings['AMP']
-        self._events = ('start_record', 'stop_record', 'start_talking', 'stop_talking', 'voice_activated', 'music_status')
+        self._events = ('start_record', 'stop_record', 'start_talking', 'stop_talking','speech_recognized_success', 'voice_activated', 'music_status')
         self.disable = False
 
     @staticmethod
@@ -127,9 +127,9 @@ class Main:
     def _amplifier(self, name, data):
         global Talk_status, Play_status
         _amp = 0
-        if name == 'start_talking':
+        if name == 'start_talking' or name == 'voice_activated':
             Talk_status = 1
-        if name == 'stop_talking':
+        if name == 'stop_talking' or name == 'speech_recognized_success':
             Talk_status = 0
         if name == 'music_status':
             if data == 'play':
