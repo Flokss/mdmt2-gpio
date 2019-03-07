@@ -19,8 +19,9 @@ try:
     GPIO_OUTPUT_MODE = _gpio.OUTPUT
     GPIO_OUT = _gpio.output
     BOARD = 'opi'
-    LED1 =12 #_port.PA12
-    LED2 =11 # _port.PA11
+    LED1 = 12 #_port.PA12
+    LED2 = 11 # _port.PA11
+    AMP = 13  # _port.PA13
 except ImportError:
     import RPi.GPIO as _GPIO
     _GPIO.setmode(_GPIO.BCM)
@@ -31,16 +32,15 @@ except ImportError:
     BOARD = 'rpi'
     LED1 = 20
     LED2 = 21
-
-
+    AMP = 26
+Talk_status = 0
+Play_status = 0
 """
 Обязательно. Не пустое имя плагина, тип - str.
 Максимальная длинна 30 символов, не должно содержать пробельных символов, запятых и быть строго в нижнем регистре.
 Имя плагина является его идентификатором и должно быть уникально.
 """
 NAME = 'gpio'
-
-
 """
 Обязательно. Версия API под которую написан плагин, тип - int.
 Если оно меньше config.ConfigHandler.API то плагин не будет загружен, а в лог будет выдано сообщение.
@@ -50,10 +50,7 @@ API не увеличивается при добавлении новых ме�
 Если API не используется или вам все равно, можно задать заведомо большое число (999999).
 """
 API = 30
-
-
-SETTINGS = 'gpio_config_config'
-
+SETTINGS = 'gpio_config'
 
 class Main:
     """
@@ -64,7 +61,6 @@ class Main:
     Методы: start, reload, stop, join.
     Свойства: disable.
     """
-
     def __init__(self, cfg, log, owner):
         """
         Конструктор плагина.
@@ -74,19 +70,22 @@ class Main:
         """
         global LED1
         global LED2
+        global AMP
         self.cfg = cfg
         self.log = log
         self.own = owner
         self._settings = self._get_settings()
         LED1 = self._settings['LED1']
         LED2 = self._settings['LED2']
-        self._events = ('start_record', 'stop_record', 'start_talking', 'stop_talking')
+        AMP = self._settings['AMP']
+        self._events = ('start_record', 'stop_record', 'start_talking', 'stop_talking', 'voice_activated', 'music_status')
         self.disable = False
 
     @staticmethod
     def _init():
         GPIO_CFG(LED1, GPIO_OUTPUT_MODE)
         GPIO_CFG(LED2, GPIO_OUTPUT_MODE)
+        GPIO_CFG(AMP, GPIO_OUTPUT_MODE)
 
     def _led_off(self):
         GPIO_OUT(LED1, not self._settings['led_on'])
@@ -96,35 +95,59 @@ class Main:
         self._init()
         self._led_off()
         self.own.subscribe(self._events, self._callback)
-        self.log('BOARD '+BOARD)
-        self.log('LED1 pin '+ str(LED1))
-        self.log('LED2 pin ' + str(LED2))
-
+        self._log('BOARD '+BOARD)
+        self._log('LED1 pin '+ str(LED1))
+        self._log('LED2 pin ' + str(LED2))
+        self._log('Amplifier pin ' + str(AMP))
 
     def stop(self):
         self.own.unsubscribe(self._events, self._callback)
         self._led_off()
 
-    def _callback(self, name, *_, **__):
+    def _callback(self, name, data=None,*_, **__):
         led_on = self._settings['led_on']
+        self._amplifier(name, data)
         if name == 'start_talking':
             GPIO_OUT(LED1, led_on)
-            self.log('start_talking LED1 on')
+            self._log('start_talking LED1 on')
         elif name == 'stop_talking':
             GPIO_OUT(LED1, not led_on)
-            self.log('stop_talking LED1 off')
+            self._log('stop_talking LED1 off')
         elif name == 'start_record':
             GPIO_OUT(LED2, led_on)
-            self.log('start_record LED2 on')
+            self._log('start_record LED2 on')
         elif name == 'stop_record':
             GPIO_OUT(LED2, not led_on)
-            self.log('stop_record LED2 off')
+            self._log('stop_record LED2 off')
+
+    def _log(self,text):
+        if self._settings['LOG_on']==1:
+            self.log(text)
+
+    def _amplifier(self, name, data):
+        global Talk_status, Play_status
+        _amp = 0
+        if name == 'start_talking':
+            Talk_status = 1
+        if name == 'stop_talking':
+            Talk_status = 0
+        if name == 'music_status':
+            if data == 'play':
+                Play_status = 1
+            else:
+                Play_status = 0
+        if Play_status == 1 or Talk_status == 1:
+            _amp = 1
+        else:
+            _amp = 0
+        GPIO_OUT(AMP, _amp)
+        self._log('AMPLIFIER' + str(_amp))
 
     def _get_settings(self) -> dict:
         if BOARD =='opi':
-            def_cfg = {'led_on': 1,'board':BOARD, 'LED1':11, 'LED2':12}
+            def_cfg = {'led_on': 1,'board':BOARD, 'LED1':11, 'LED2':12, 'AMP':13, 'LOG_on':0}
         else:
-            def_cfg = {'led_on': 1, 'board': BOARD, 'LED1': 20, 'LED2': 21}
+            def_cfg = {'led_on': 1, 'board': BOARD, 'LED1': 20, 'LED2': 21, 'AMP':26, 'LOG_on':0}
         cfg = self.cfg.load_dict(SETTINGS)
         if isinstance(cfg, dict):
             is_ok = True
